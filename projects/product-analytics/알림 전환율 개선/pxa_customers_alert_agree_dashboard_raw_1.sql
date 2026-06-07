@@ -1,5 +1,5 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_alert_agree_dashboard_raw_1 AS (
-INSERT INTO `analytics`.customers_alert_agree_dashboard_raw_1
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_alert_agree_dashboard_raw_1 AS (
+INSERT INTO `team`.`tech`.customers_alert_agree_dashboard_raw_1
     WITH agree AS (
       WITH RAW AS (
           SELECT 
@@ -10,7 +10,7 @@ INSERT INTO `analytics`.customers_alert_agree_dashboard_raw_1
               device_agree_yn,
               LAG(marketing_agree_yn, 1) OVER (PARTITION BY uid ORDER BY date) AS marketing_agree_yn_yday,
               LAG(device_agree_yn, 1) OVER (PARTITION BY uid ORDER BY date) AS device_agree_yn_yday
-          FROM `analytics`.customers_alert_agree_status_raw
+          FROM `team`.`tech`.customers_alert_agree_status_raw
           WHERE uid IS NOT NULL AND hash_id IS NOT NULL
       )
       SELECT *
@@ -29,7 +29,7 @@ INSERT INTO `analytics`.customers_alert_agree_dashboard_raw_1
                 , count(distinct a.uid) AS unique_count
                 , count(distinct if(a.date = b.first_date, a.uid, null)) AS new_unique_count
             FROM agree A
-            LEFT JOIN (select uid, MIN(date) AS first_date from `analytics`.customers_alert_agree_status_raw where device_agree_yn = 'Y' group by uid) B
+            LEFT JOIN (select uid, MIN(date) AS first_date from `team`.`tech`.customers_alert_agree_status_raw where device_agree_yn = 'Y' group by uid) B
                 ON a.uid = b.uid
             GROUP BY a.date
             , a.marketing_agree_yn

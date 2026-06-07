@@ -18,8 +18,8 @@ df = spark.sql("""
     , if(a.codinote_prd_click is not null, a.codinote_prd_click, 0) AS codinote_prd_click
     , if(a.d7_retention_yn is not null, a.d7_retention_yn, 0) AS d7_retention_yn
     , if(dateadd(day, 7, if(a.date is not null, a.date, c.action_date)) >= b.ord_date, 1, 0) AS d7_ord_yn
-    FROM (select hash_id, action_date from `analytics`.onboard_log_action_merged where action_dt between '20240901' and '20240930' and action_type = 'visit') C
-    LEFT JOIN `analytics`.codinote_log_amp_202409 A ON a.hash_id = c.hash_id
+    FROM (select hash_id, action_date from `team`.`tech`.onboard_log_action_merged where action_dt between '20240901' and '20240930' and action_type = 'visit') C
+    LEFT JOIN `team`.`tech`.codinote_log_amp_202409 A ON a.hash_id = c.hash_id
     LEFT JOIN (select
                 to_date(a.ord_state_date, 'yyyyMMdd') AS ord_date
                 , b.hash_id

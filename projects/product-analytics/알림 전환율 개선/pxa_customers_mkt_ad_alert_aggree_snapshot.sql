@@ -1,6 +1,6 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_mkt_ad_alert_aggree_snapshot AS (
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_mkt_ad_alert_aggree_snapshot AS (
 
-INSERT INTO `analytics`.customers_mkt_ad_alert_aggree_snapshot
+INSERT INTO `team`.`tech`.customers_mkt_ad_alert_aggree_snapshot
 
 with 
 active_users as (
@@ -16,7 +16,7 @@ select
   distinct
   member_uid, 
   status 
-from source.member_v2.member_privacy_agree
+from musinsa.member_v2.member_privacy_agree
 )
 
 , push_agree as (
@@ -27,7 +27,7 @@ select
   activity_news_receive,
   snap_receive,
   coalesce(case when launching_product_receive = 'N' and benefit_sale_event_receive = 'N' and activity_news_receive = 'N' and snap_receive = 'N' then 'N' else 'Y' end, 'N') as push_agree
-from source.message.receive_push_v2
+from musinsa.message.receive_push_v2
 )
 
 select 

@@ -34,7 +34,7 @@ df = spark.sql("""
         , post_benefit_visit_cnt
         , post_engagement_cnt
         , treated_flag
-    FROM analytics.engagement_release_analysis_raw
+    FROM team.tech.engagement_release_analysis_raw
 """)
 
 # 매칭용 feature 벡터 (pre 행동 데이터만 필터링)
@@ -105,6 +105,6 @@ final_matched = (
 )
 
 # 저장
-final_matched.write.mode("overwrite").saveAsTable("analytics.engagement_release_matched_v2")
+final_matched.write.mode("overwrite").saveAsTable("team.tech.engagement_release_matched_v2")
 
-print("매칭 완료 — 결과 테이블: analytics.engagement_release_matched_v2")
+print("매칭 완료 — 결과 테이블: team.tech.engagement_release_matched_v2")

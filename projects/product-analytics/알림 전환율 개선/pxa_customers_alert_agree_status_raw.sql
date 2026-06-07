@@ -1,5 +1,5 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_alert_agree_status_raw AS (
-INSERT INTO `analytics`.customers_alert_agree_status_raw
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_alert_agree_status_raw AS (
+INSERT INTO `team`.`tech`.customers_alert_agree_status_raw
 WITH active_users AS (
   SELECT
     distinct uid
@@ -14,7 +14,7 @@ WITH active_users AS (
   SELECT
     distinct member_uid AS uid 
     , if(status = 'AGREE', 'Y', 'N') AS marketing_agree_yn
-  FROM source.member_v2.member_privacy_agree
+  FROM musinsa.member_v2.member_privacy_agree
 )
 
 , device_agree AS (
@@ -29,7 +29,7 @@ WITH RAW AS (
         ELSE 'Y'
       END AS device_agree
     , ROW_NUMBER() OVER (PARTITION BY member_uid ORDER BY tr_ts DESC) AS RANK
-  FROM source.message.receive_push_v2
+  FROM musinsa.message.receive_push_v2
 )
   SELECT
   uid
@@ -52,6 +52,6 @@ INNER JOIN device_agree C
   ON a.uid = c.uid
 GROUP BY ALL
 -- )
--- delete from `analytics`.customers_marketing_deviece_agree_raw_daily where date = '2025-09-17'
--- select * from `analytics`.customers_marketing_deviece_agree_raw_daily
+-- delete from `team`.`tech`.customers_marketing_deviece_agree_raw_daily where date = '2025-09-17'
+-- select * from `team`.`tech`.customers_marketing_deviece_agree_raw_daily
 

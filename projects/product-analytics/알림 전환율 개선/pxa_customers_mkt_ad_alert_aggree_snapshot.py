@@ -20,7 +20,7 @@ task_query_1 = load_query(DAG_DIR, 'pxa_customers_mkt_ad_alert_aggree_snapshot')
 # 3. DAG 설정
 def default_args():
     return {
-        "owner": "Data Analyst",
+        "owner": "haera kang",
         "start_date": datetime(2025, 8, 7, tzinfo=kst),  # 스케쥴링 시작 일자
         # "retries": 3,  # 실패 시 재시도 횟수
         "retries": 0,  # 실패 시 재시도 횟수 0으로 수정하기

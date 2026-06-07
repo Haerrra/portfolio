@@ -12,8 +12,8 @@ df = spark.sql("""
 
     PRE_RESTOCK AS (  -- 8/29 이전 메모로 '재입고'였던 goods_no
         SELECT DISTINCT b.goods_no
-        FROM source.bizest.goods a
-        JOIN source.bizest.goods_hist_management b ON a.goods_no = b.goods_no
+        FROM musinsa.bizest.goods a
+        JOIN musinsa.bizest.goods_hist_management b ON a.goods_no = b.goods_no
         JOIN gspread.operations.ops_team_id d       ON b.id = d.id
         WHERE a.goods_type = 'P'
           AND b.sale_stat_cl = '40'                  -- 판매중
@@ -33,9 +33,9 @@ df = spark.sql("""
             -- b.id,
             IF(b.memo LIKE '%재입고%', 'Y', 'N') AS restock,
             COUNT(a.goods_no) AS goods_cnt
-        FROM source.bizest.goods a
-        JOIN source.bizest.goods_hist_management b ON a.goods_no = b.goods_no
-        JOIN source.partnerportal.brand c          ON a.brand = c.brand
+        FROM musinsa.bizest.goods a
+        JOIN musinsa.bizest.goods_hist_management b ON a.goods_no = b.goods_no
+        JOIN musinsa.partnerportal.brand c          ON a.brand = c.brand
         JOIN gspread.operations.ops_team_id d       ON b.id = d.id
         WHERE a.goods_type = 'P'
           AND b.sale_stat_cl = '40'
@@ -55,13 +55,13 @@ df = spark.sql("""
             -- b.id,
             IF(b.rt > e.rt OR f.goods_no IS NOT NULL, 'Y', 'N') AS restock,
             COUNT(a.goods_no) AS goods_cnt
-        FROM source.bizest.goods a
-        JOIN source.bizest.goods_hist_management b ON a.goods_no = b.goods_no
-        JOIN source.partnerportal.brand c          ON a.brand = c.brand
+        FROM musinsa.bizest.goods a
+        JOIN musinsa.bizest.goods_hist_management b ON a.goods_no = b.goods_no
+        JOIN musinsa.partnerportal.brand c          ON a.brand = c.brand
         JOIN gspread.operations.ops_team_id d       ON b.id = d.id
         LEFT JOIN (
             SELECT goods_no, rt
-            FROM source.bizest.goods_additional_information
+            FROM musinsa.bizest.goods_additional_information
             WHERE item_key = 'confirmed_on_sales_yn'
               AND item_value = 'Y'
             GROUP BY 1,2
@@ -85,9 +85,9 @@ df = spark.sql("""
             -- b.id,
             IF(b.memo LIKE '%재입고%', 'Y', 'N') AS restock,
             COUNT(a.goods_no) AS goods_cnt
-        FROM source.bizest.goods a
-        JOIN source.bizest.goods_hist_management b ON a.goods_no = b.goods_no
-        JOIN source.partnerportal.brand c          ON a.brand = c.brand
+        FROM musinsa.bizest.goods a
+        JOIN musinsa.bizest.goods_hist_management b ON a.goods_no = b.goods_no
+        JOIN musinsa.partnerportal.brand c          ON a.brand = c.brand
         JOIN gspread.operations.ops_team_id d       ON b.id = d.id
         WHERE a.goods_type = 'P'
           AND b.sale_stat_cl = '9'                   -- 검수반려
@@ -107,13 +107,13 @@ df = spark.sql("""
             -- b.id,
             IF(b.rt > e.rt OR e.goods_no IS NOT NULL, 'Y', 'N') AS restock,
             COUNT(a.goods_no) AS goods_cnt
-        FROM source.bizest.goods a
-        JOIN source.bizest.goods_hist_management b ON a.goods_no = b.goods_no
-        JOIN source.partnerportal.brand c          ON a.brand = c.brand
+        FROM musinsa.bizest.goods a
+        JOIN musinsa.bizest.goods_hist_management b ON a.goods_no = b.goods_no
+        JOIN musinsa.partnerportal.brand c          ON a.brand = c.brand
         JOIN gspread.operations.ops_team_id d       ON b.id = d.id
         LEFT JOIN (
             SELECT goods_no, rt
-            FROM source.bizest.goods_additional_information
+            FROM musinsa.bizest.goods_additional_information
             WHERE item_key = 'confirmed_on_sales_yn'
               AND item_value = 'Y'
             GROUP BY 1,2
@@ -143,7 +143,7 @@ df = spark.sql("""
     UNION ALL
     SELECT to_date(concat(year_month, '01'), 'yyyyMMdd') AS year_month, metric, restock, goods_cnt FROM REJECT_POST
     ) A
-    LEFT JOIN analytics.pxa_2908_model B ON a.year_month = b.year_month
+    LEFT JOIN team.tech.pxa_2908_model B ON a.year_month = b.year_month
     ORDER BY 1, 2, 3, 4
 """)
 

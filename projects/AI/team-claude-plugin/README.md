@@ -1,4 +1,4 @@
-# ACME PDA Claude Plugin
+# MSS PDA Claude Plugin
 AI 기반으로 데이터 분석 및 파이프라인 작업을 자동화하는 Claude Plugin입니다.
 Jira 티켓을 기반으로 Databricks, Airflow, GitHub까지 연결된 end-to-end 워크플로우를 수행합니다.
 
@@ -9,7 +9,7 @@ Jira 티켓을 기반으로 Databricks, Airflow, GitHub까지 연결된 end-to-e
 <pre>
 .claude-plugin/
  ├── marketplace.json
-acme-pda/
+mss-pda/
  ├── .claude-plugin/     # Claude plugin 설정
  ├── commands/           # 실행 가능한 워크플로우 정의 (workflow_*, feedback, hello, setup)
  ├── context/            # 공통 규칙 및 실행 컨텍스트 (guidelines, analysis, pipeline, output, measurement)
@@ -99,11 +99,11 @@ acme-pda/
 #### Analysis
 - SQL: pxa_analysis_sql_{ticket_id}.sql
 - Python: pxa_analysis_python_{ticket_id}.py
-- Dataset: analytics.pxa_analysis_dataset_{ticket_id}
+- Dataset: team.tech.pxa_analysis_dataset_{ticket_id}
 #### Pipeline
 - SQL: pxa_pipeline_sql_{ticket_id}.sql
 - Python: pxa_pipeline_python_{ticket_id}.py
-- Dataset: analytics.pxa_pipeline_dataset_{ticket_id}
+- Dataset: team.tech.pxa_pipeline_dataset_{ticket_id}
 
 ## ⚠️ Safety Rules
 - Databricks 실패 시 작업 즉시 중단
@@ -111,18 +111,18 @@ acme-pda/
 - 존재하지 않는 테이블 사용 금지
 
 ## Measurement & Analytics
-플러그인의 사용률·만족도를 측정합니다. 자세한 정의는 `acme-pda/telemetry/schema.md`, 정책은 `acme-pda/context/measurement.md` 참고.
+플러그인의 사용률·만족도를 측정합니다. 자세한 정의는 `mss-pda/telemetry/schema.md`, 정책은 `mss-pda/context/measurement.md` 참고.
 
 | 축 | 데이터 소스 | 로컬 산출물 | Databricks 적재 대상 |
 |----|------------|------------|---------------------|
-| Adoption (사용률) | hooks → `log-invocation.sh` | `~/.claude/acme-pda-telemetry/invocations.jsonl` | `analytics.pxa_ai_invocations_raw` |
-| Satisfaction (만족도) | `/acme-pda:feedback` → `log-feedback.sh` | `~/.claude/acme-pda-telemetry/feedback.jsonl` | `analytics.pxa_ai_feedback_raw` |
+| Adoption (사용률) | hooks → `log-invocation.sh` | `~/.claude/mss-pda-telemetry/invocations.jsonl` | `team.tech.pxa_ai_invocations_raw` |
+| Satisfaction (만족도) | `/mss-pda:feedback` → `log-feedback.sh` | `~/.claude/mss-pda-telemetry/feedback.jsonl` | `team.tech.pxa_ai_feedback_raw` |
 
 운영 흐름:
-1. `/acme-pda:setup` 실행으로 사용자 ID, Databricks 토큰/Warehouse ID 저장
+1. `/mss-pda:setup` 실행으로 사용자 ID, Databricks 토큰/Warehouse ID 저장
 2. 워크플로우 사용 시 hooks가 자동으로 invocations.jsonl에 append (로컬)
-3. 워크플로우 마지막 step에서 `/acme-pda:feedback` 호출 → feedback.jsonl 기록 + 종료된 workflow_id 단위로 두 raw 테이블에 자동 INSERT
+3. 워크플로우 마지막 step에서 `/mss-pda:feedback` 호출 → feedback.jsonl 기록 + 종료된 workflow_id 단위로 두 raw 테이블에 자동 INSERT
 
 비활성화:
-- 전체: `ACME_TELEMETRY_ENABLED=false`
-- Databricks 적재만 끔 (로컬 유지): `ACME_FLUSH_ENABLED=false`
+- 전체: `MSS_TELEMETRY_ENABLED=false`
+- Databricks 적재만 끔 (로컬 유지): `MSS_FLUSH_ENABLED=false`

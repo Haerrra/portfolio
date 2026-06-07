@@ -1,17 +1,17 @@
 {
     "name": "pda-claude-marketplace",
     "owner": {
-      "name": "analyst",
-      "email": "analyst@example.com"
+      "name": "haera.kang",
+      "email": "haera.kang@musinsa.com"
     },
     "plugins": [
       {
-        "name": "acme-pda",
+        "name": "mss-pda",
         "description": "PDA workflow plugin for data analysis and pipeline automation",
         "source": {
           "source": "git-subdir",
-          "url": "https://github.com/acme-data/pda-claude-plugin.git",
-          "path": "acme-pda"
+          "url": "https://github.com/musinsa/pda-claude-plugin.git",
+          "path": "mss-pda"
         }
       }
     ]

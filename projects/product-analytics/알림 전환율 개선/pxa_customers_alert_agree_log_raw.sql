@@ -1,5 +1,5 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_alert_agree_log_raw AS (
-INSERT INTO `analytics`.customers_alert_agree_log_raw
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_alert_agree_log_raw AS (
+INSERT INTO `team`.`tech`.customers_alert_agree_log_raw
 
     SELECT
         to_date(date, 'yyyyMMdd') AS date

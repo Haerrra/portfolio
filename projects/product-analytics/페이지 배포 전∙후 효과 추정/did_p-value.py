@@ -15,8 +15,8 @@ df = spark.sql("""
     , pre_ord_ggmv AS ord_ggmv
     , pre_benefit_visit_cnt AS benefit_visit_cnt
     , pre_engagement_cnt AS engagement_cnt
-    FROM analytics.engagement_release_analysis_raw
-    WHERE hash_id in (SELECT control_hash FROM analytics.engagement_release_matched_v2)
+    FROM team.tech.engagement_release_analysis_raw
+    WHERE hash_id in (SELECT control_hash FROM team.tech.engagement_release_matched_v2)
 
     UNION ALL
 
@@ -30,8 +30,8 @@ df = spark.sql("""
     , post_ord_ggmv AS ord_ggmv
     , post_benefit_visit_cnt AS benefit_visit_cnt
     , post_engagement_cnt AS engagement_cnt
-    FROM analytics.engagement_release_analysis_raw
-    WHERE hash_id in (SELECT control_hash FROM analytics.engagement_release_matched_v2)
+    FROM team.tech.engagement_release_analysis_raw
+    WHERE hash_id in (SELECT control_hash FROM team.tech.engagement_release_matched_v2)
 
     UNION ALL
 
@@ -46,8 +46,8 @@ df = spark.sql("""
     , pre_ord_ggmv AS ord_ggmv
     , pre_benefit_visit_cnt AS benefit_visit_cnt
     , pre_engagement_cnt AS engagement_cnt
-    FROM analytics.engagement_release_analysis_raw
-    WHERE hash_id in (SELECT treated_hash FROM analytics.engagement_release_matched_v2)
+    FROM team.tech.engagement_release_analysis_raw
+    WHERE hash_id in (SELECT treated_hash FROM team.tech.engagement_release_matched_v2)
 
     UNION ALL
 
@@ -61,8 +61,8 @@ df = spark.sql("""
     , post_ord_ggmv AS ord_ggmv
     , post_benefit_visit_cnt AS benefit_visit_cnt
     , post_engagement_cnt AS engagement_cnt
-    FROM analytics.engagement_release_analysis_raw
-    WHERE hash_id in (SELECT treated_hash FROM analytics.engagement_release_matched_v2)
+    FROM team.tech.engagement_release_analysis_raw
+    WHERE hash_id in (SELECT treated_hash FROM team.tech.engagement_release_matched_v2)
 """)
 
 # Pandas로 로딩

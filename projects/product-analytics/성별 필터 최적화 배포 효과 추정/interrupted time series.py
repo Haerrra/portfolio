@@ -11,7 +11,7 @@ from scipy import stats
 # ======================================
 # 1. 데이터 로드
 # ======================================
-df = spark.table("analytics.cpcms_estimate_db")
+df = spark.table("team.tech.cpcms_estimate_db")
 
 df = df.select(
     "date",

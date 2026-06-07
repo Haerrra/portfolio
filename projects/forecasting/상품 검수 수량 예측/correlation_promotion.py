@@ -13,8 +13,8 @@ df = spark.sql("""
     , a.goods_cnt
     , b.active_brand_cnt
     , b.campaign_brand_cnt
-    FROM (select year_month, goods_cnt from `analytics`.`pxa_2908_model` where year_month between '2022-12-01' and '2025-09-01') A -- 상관분석에 사용될 데이터 기간을 between 사이에 입력해주세요.
-    LEFT JOIN `analytics`.pxa_2908_brandcorr B
+    FROM (select year_month, goods_cnt from `team`.`tech`.`pxa_2908_model` where year_month between '2022-12-01' and '2025-09-01') A -- 상관분석에 사용될 데이터 기간을 between 사이에 입력해주세요.
+    LEFT JOIN `team`.`tech`.pxa_2908_brandcorr B
     ON a.year_month = b.year_month
     GROUP BY ALL
 """)

@@ -23,13 +23,13 @@ df = spark.sql("""
             , a.first_ord_date
             , b.action_date
         from
-        (select hash_id, first_ord_date from `analytics`.onboard_first_order_1000 where first_ord_dt between '20240825' and '20240930') A
-        inner join (select hash_id, action_date from `analytics`.onboard_log_action_merged where action_dt between '20240901' and '20240930' and action_type = 'visit') B ON a.hash_id = b.hash_id) C
-    LEFT JOIN `analytics`.codinote_log_amp_202409 A ON c.hash_id = a.hash_id
+        (select hash_id, first_ord_date from `team`.`tech`.onboard_first_order_1000 where first_ord_dt between '20240825' and '20240930') A
+        inner join (select hash_id, action_date from `team`.`tech`.onboard_log_action_merged where action_dt between '20240901' and '20240930' and action_type = 'visit') B ON a.hash_id = b.hash_id) C
+    LEFT JOIN `team`.`tech`.codinote_log_amp_202409 A ON c.hash_id = a.hash_id
     LEFT JOIN (select
                 ord_date
                 , hash_id
-            from `analytics`.onboard_first_order_1000
+            from `team`.`tech`.onboard_first_order_1000
             where purchase_cnt = 2) B
     ON c.hash_id = b.hash_id
     WHERE c.first_ord_date <= a.date

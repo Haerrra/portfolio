@@ -1,5 +1,5 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_alert_agree_dashboard_kr AS (
-INSERT INTO `analytics`.customers_alert_agree_dashboard_kr
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_alert_agree_dashboard_kr AS (
+INSERT INTO `team`.`tech`.customers_alert_agree_dashboard_kr
 
 WITH raw_0 AS (
 -- 마광수동 동의자 중 기기 알림 OFF 유저 수
@@ -14,7 +14,7 @@ SELECT
     , sum(if(marketing_agree_yn = 'Y', unique_count, 0)) AS goal_marketing_opt_in_ucnt -- 마광수동 동의 유저
     , sum(if(marketing_agree_yn = 'Y' AND device_agree_yn = 'Y', unique_count, 0)) AS goal_device_opt_in_ucnt -- 마광수동 동의+기기 알림 동의 유저
     , sum(if(marketing_agree_yn = 'Y' AND device_agree_yn = 'Y', unique_count, 0)) / sum(if(marketing_agree_yn = 'Y', unique_count, 0)) AS goal_ratio_device_opt_in_marketing -- 마광수동 동의 유저 중 기기 알림 동의 유저 비율
-FROM `analytics`.customers_alert_agree_dashboard_raw_1
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_1
 WHERE date = date_add(current_date(), -1)
 -- WHERE date = '2025-09-23'
 GROUP BY ALL
@@ -25,7 +25,7 @@ GROUP BY ALL
 SELECT
     date_add(current_date(), -1) AS date
     , sum(cum_unique_count) AS target_cum_device_opt_in_ucnt
-FROM `analytics`.customers_alert_agree_dashboard_raw_1
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_1
 WHERE date between '2025-09-24' AND date_add(current_date(), -1)
 AND marketing_agree_yn_yday = 'Y'
 AND device_agree_yn_yday = 'N'
@@ -41,7 +41,7 @@ SELECT
     , sum(if(device_agree_yn_yday = 'N', unique_count, 0)) AS device_opt_out_ucnt
     , sum(if(device_agree_yn_yday = 'N' and device_agree_yn = 'Y', unique_count, 0)) AS device_opt_in_ucnt
     , sum(if(device_agree_yn_yday = 'N' and device_agree_yn = 'Y', unique_count, 0)) / sum(if(device_agree_yn_yday = 'N', unique_count, 0)) AS cvr_device_opt_out_to_in
-FROM `analytics`.customers_alert_agree_dashboard_raw_1
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_1
 WHERE date = date_add(current_date(), -1)
 -- WHERE date = '2025-09-23'
 GROUP BY ALL
@@ -52,7 +52,7 @@ GROUP BY ALL
 SELECT
     date_add(current_date(), -1) AS date
     , sum(cum_unique_count) AS cum_device_opt_in_ucnt
-FROM `analytics`.customers_alert_agree_dashboard_raw_1
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_1
 WHERE date between '2025-09-24' AND date_add(current_date(), -1)
 GROUP BY ALL
 )
@@ -84,7 +84,7 @@ SELECT
     , sum(if(event_group = 'click_device_agree', count, 0)) / sum(if(event_group = 'click_device_agree', unique_count, 0)) AS freq_device_agree
     , sum(if(event_group = 'click_marketing_agree', unique_count, 0)) / sum(if(event_group = 'impression_marketing_agree', unique_count, 0)) AS ctr_marketing_agree
     , sum(if(event_group = 'click_device_agree', unique_count, 0)) / sum(if(event_group = 'impression_device_agree', unique_count, 0)) AS ctr_device_agree
-FROM `analytics`.customers_alert_agree_dashboard_raw_2
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_2
 WHERE date = date_add(current_date(), -1)
 -- WHERE date = '2025-09-23'
     AND g_app_version_group = '1'

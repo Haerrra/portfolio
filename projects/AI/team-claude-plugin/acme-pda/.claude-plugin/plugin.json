@@ -1,9 +1,0 @@
-{
-  "name": "acme-pda",
-  "version": "1.1.0",
-  "description": "Claude Code Plugin for ACME PDA workflows (with usage telemetry & metrics reporting)",
-  "author": {
-    "name": "Data Analyst",
-    "email": "analyst@example.com"
-  }
-}

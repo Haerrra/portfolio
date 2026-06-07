@@ -17,7 +17,7 @@ df = spark.sql("""
         ord_ggmv,
         benefit_visit_cnt,
         engagement_cnt
-    FROM analytics.engagement_release_analysis_daily_raw
+    FROM team.tech.engagement_release_analysis_daily_raw
     WHERE day BETWEEN -7 AND 6
 """).toPandas()
 

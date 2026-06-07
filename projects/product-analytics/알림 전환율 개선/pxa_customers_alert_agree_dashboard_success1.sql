@@ -1,5 +1,5 @@
--- CREATE OR REPLACE TABLE `analytics`.customers_alert_agree_dashboard_success1 AS (
-INSERT INTO `analytics`.customers_alert_agree_dashboard_success1
+-- CREATE OR REPLACE TABLE `team`.`tech`.customers_alert_agree_dashboard_success1 AS (
+INSERT INTO `team`.`tech`.customers_alert_agree_dashboard_success1
 
 -- (앱버전별) 기기 알림 바텀시트/넛지 노출 수
 -- (앱버전별) 기기 알림 바텀시트/넛지 노출 유저 수
@@ -28,7 +28,7 @@ SELECT
     , sum(if(event_group = 'click_device_agree', count, 0)) / sum(if(event_group = 'impression_device_agree', unique_count, 0)) AS freq_device_agree
     , sum(if(event_group = 'click_marketing_agree', unique_count, 0)) / sum(if(event_group = 'impression_marketing_agree', unique_count, 0)) AS ctr_marketing_agree
     , sum(if(event_group = 'click_device_agree', unique_count, 0)) / sum(if(event_group = 'impression_device_agree', unique_count, 0)) AS ctr_device_agree
-FROM `analytics`.customers_alert_agree_dashboard_raw_2
+FROM `team`.`tech`.customers_alert_agree_dashboard_raw_2
 WHERE date = date_add(current_date(), -1)
     AND g_app_version_group = '0'
     AND g_platform = '1'
