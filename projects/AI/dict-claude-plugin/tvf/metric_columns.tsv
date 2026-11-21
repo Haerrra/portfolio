@@ -1,0 +1,335 @@
+channel	function	metric_type	metric	data_type	filled_period	note
+cm	product	프로덕트	DAU/WAU/MAU	LONG	전체	p_period 에 따라 DAU·WAU·MAU 중 하나로 읽는다
+cm	product	프로덕트	방문 Stickiness dau/wau	DOUBLE	month	완전한 주(월요일 시작 7일)만 평균. 없으면 NULL
+cm	product	프로덕트	방문 Stickiness wau/mau	DOUBLE	month	위와 같음
+cm	product	프로덕트	방문 Retention M+1	DOUBLE	month	p_end_dt 다음 달까지 스캔. 다음 달 미적재면 과소
+cm	product	프로덕트	전환 Retention M+1	DOUBLE	month	상품 클릭 기준 (무신사 (가) 정의)
+cm	product	프로덕트	노출 세션 수	LONG	전체	세션 계열은 session_id 기준, 미로그인 포함
+cm	product	프로덕트	클릭 세션 수	LONG	전체	
+cm	product	프로덕트	상품상세 세션 수	LONG	전체	
+cm	product	프로덕트	활성 세션 수	LONG	전체	
+cm	product	프로덕트	방문 > 구매 전환율 (CVR)	DOUBLE	전체	구매자는 정산 뷰 order_type = order
+cm	product	프로덕트	방문 > 상품 전환율	DOUBLE	전체	
+cm	product	프로덕트	상세 > 구매 전환율	DOUBLE	전체	
+cm	product	프로덕트	상품 CTR	DOUBLE	전체	
+cm	product	프로덕트	상품 전환수	LONG	전체	
+cm	product	프로덕트	상품 노출수	LONG	전체	
+cm	product	프로덕트	상품전환 사용자수	LONG	전체	
+cm	product	프로덕트	상품상세 방문자수	LONG	전체	
+cm	product	프로덕트	상품상세 뷰수	LONG	전체	
+cm	product	프로덕트	인당 상품 탐색 빈도	DOUBLE	전체	
+cm	product	프로덕트	인당 브랜드 탐색 빈도	DOUBLE	전체	
+cm	product	프로덕트	인당 상품조회빈도	DOUBLE	전체	
+cm	product	프로덕트	전환율(CVR)	DOUBLE	전체	
+cm	product	프로덕트	클릭률(CTR)	DOUBLE	전체	
+cm	product	프로덕트	페이지 PDP전환율(CVR)	DOUBLE	전체	
+cm	product	프로덕트	페이지 방문자수	LONG	전체	
+cm	product	프로덕트	페이지 방문수	LONG	전체	
+cm	product	프로덕트	상품상세 1Depth 전환율	DOUBLE	전체	2Depth 는 제공하지 않음 (범위 밖)
+cm	product	프로덕트	1인당 상품 좋아요 수	DOUBLE	전체	
+cm	product	프로덕트	1인당 브랜드 좋아요 수	DOUBLE	전체	
+cm	commerce	커머스	GGMV	LONG	전체	취소·반품 차감 전
+cm	commerce	커머스	GMV	LONG	전체	취소·반품 차감 후. 마케팅 유형의 GGMV 기준 지표와 섞지 말 것
+cm	commerce	커머스	쿠폰할인	DECIMAL	전체	부담주체 축 롤업. 종류 축 2종과 더하면 이중계상
+cm	commerce	커머스	상품 쿠폰할인	DECIMAL	전체	
+cm	commerce	커머스	장바구니 쿠폰할인	DECIMAL	전체	
+cm	commerce	커머스	적립금할인	DECIMAL	전체	
+cm	commerce	커머스	선적립금할인	DECIMAL	전체	
+cm	commerce	커머스	총 결제 할인금액	DECIMAL	전체	GMV − Net GMV 역산. 제휴카드·RADAR 추가할인 포함
+cm	commerce	커머스	총 결제 할인율	DOUBLE	전체	
+cm	commerce	커머스	Net GMV	DECIMAL	전체	
+cm	commerce	커머스	결제금액	DECIMAL	전체	
+cm	commerce	커머스	업체부담 결제할인액	DECIMAL	전체	RADAR 추가할인 파트너부담분 포함 (현재 0)
+cm	commerce	커머스	자사부담 결제할인액	DECIMAL	전체	RADAR 추가할인 29CM 부담분 포함. 시트 산식과 다름 → [해석_주의](interpretation_notes.md)
+cm	commerce	커머스	자사부담 결제할인율	DOUBLE	전체	
+cm	commerce	커머스	Gross Take Amount	DECIMAL	전체	
+cm	commerce	커머스	Gross Take Rate	DOUBLE	전체	
+cm	commerce	커머스	Net Take Amount	DECIMAL	전체	이미 VAT 제외. Gross Take 에서 재계산하지 말 것
+cm	commerce	커머스	Net Take Rate	DOUBLE	전체	
+cm	commerce	커머스	공헌이익액	DECIMAL	전체	contribution_profit_lag (물류비 lag 반영)
+cm	commerce	커머스	공헌이익률	DOUBLE	전체	
+cm	commerce	커머스	구매자 수 (GMV 기준)	LONG	전체	취소 전용 주문 회원 포함
+cm	commerce	커머스	구매자 수 (판매행 기준)	LONG	전체	판매행 회원만 (V8 「구매자수 (판매행)」)
+cm	commerce	커머스	주문 건수 (GMV 기준)	LONG	전체	판매 − 취소·반품 주문 (order − order_cs, V8 「주문건수 (GMV기준)」). 기본 안내 두 열 중 하나. 일 단위 음수 가능. 2026-10-19 전에는 「주문 건수」 값
+cm	commerce	커머스	주문 건수 (판매행 기준)	LONG	전체	결제된 주문 (V8 「주문건수 (판매행)」). 기본 안내 두 열 중 하나
+cm	commerce	커머스	주문 건수	LONG	전체	무슨 처리든 있었던 주문 전체 (V8 「주문 건수」). 명시 요청 때만
+cm	commerce	커머스	판매수량 (GMV 기준)	LONG	전체	
+cm	commerce	커머스	인당 주문 건수 (GMV 기준)	DOUBLE	전체	
+cm	commerce	커머스	평균판매단가 (GMV 기준)	DOUBLE	전체	
+cm	commerce	커머스	객단가 (GMV 기준)	DOUBLE	전체	
+cm	commerce	커머스	평균주문단가 (GMV 기준)	DOUBLE	전체	
+cm	ads	광고사업	광고 노출 수	LONG	전체	
+cm	ads	광고사업	광고 클릭 수	LONG	전체	
+cm	ads	광고사업	광고 매출액	DOUBLE	전체	= 광고주 집행 광고비. 원 단위
+cm	ads	광고사업	CPC	DOUBLE	전체	
+cm	ads	광고사업	광고 직접 기여 구매 수	LONG	전체	
+cm	ads	광고사업	광고 직접 기여 거래액	DOUBLE	전체	moloco 7일 기여. 정산 GMV 와 정의 다름
+cm	ads	광고사업	광고 간접 기여 구매 수	LONG	전체	
+cm	ads	광고사업	광고 간접 기여 거래액	DOUBLE	전체	
+cm	ads	광고사업	광고 직접 기여 ROAS	DOUBLE	전체	퍼센트. 100 = 손익분기
+cm	ads	광고사업	광고 간접 기여 ROAS	DOUBLE	전체	
+cm	payments	페이먼츠	무머니 순연동 사용자 수	LONG	전체	누적값. 기간 합이 아니라 마지막 날 값
+cm	payments	페이먼츠	무머니 연동 사용자 수	LONG	전체	누적값. 위와 같음
+cm	payments	페이먼츠	무머니 충전 금액	LONG	전체	
+cm	payments	페이먼츠	무머니 인출 금액	LONG	전체	
+cm	payments	페이먼츠	무머니 결제 거래액	LONG	전체	pg_kind = MUSINSAPAYMENTS. 무신사페이(TOSSPAYMENTS) 제외
+cm	payments	페이먼츠	바우처 순발급 금액	LONG	전체	평상시 0. 캠페인 회수 시 음수 가능
+cm	payments	페이먼츠	무머니 AoV	DOUBLE	전체	
+cm	payments	페이먼츠	무머니 충전 사용자 수	LONG	day	day 에서만. 일별 값을 합산하지 말 것
+cm	marketing	마케팅	가입자 수	LONG	전체	
+cm	marketing	마케팅	첫 구매자 수	LONG	전체	생애 첫 구매. GGMV 기준
+cm	marketing	마케팅	카테고리 첫 구매자 수	LONG	전체	카테고리를 가로지른 사용자 distinct. 카테고리별 합 아님
+cm	marketing	마케팅	구매자 수 (GGMV 기준)	LONG	전체	원주문 행만. 커머스의 GMV 기준 동명 지표와 값 다름
+cm	marketing	마케팅	주문 건수 (GGMV 기준)	LONG	전체	
+cm	marketing	마케팅	판매수량 (GGMV 기준)	LONG	전체	
+cm	marketing	마케팅	인당 주문 건수 (GGMV 기준)	DOUBLE	전체	
+cm	marketing	마케팅	평균판매단가 (GGMV 기준)	DOUBLE	전체	
+cm	marketing	마케팅	객단가 (GGMV 기준)	DOUBLE	전체	
+cm	marketing	마케팅	평균주문단가 (GGMV 기준)	DOUBLE	전체	
+cm	marketing	마케팅	방문자 수 (로그인 기준)	LONG	전체	
+cm	marketing	마케팅	앱설치 수	LONG	전체	appsFlyer_id 최초 설치일 기준. 재설치 제외. 앱삭제 수는 범위 밖
+cm	marketing	마케팅	New 회원 수	LONG	전체	월 1일 스냅샷 재고값. day·week 에서 같은 달은 같은 값 반복
+cm	marketing	마케팅	고활성 회원 수	LONG	전체	Active 이고 AA·A (60일 중 21일+ 방문). 스냅샷
+cm	marketing	마케팅	저활성 회원 수	LONG	전체	Active 이고 B·C·D·Z. 스냅샷
+cm	marketing	마케팅	비활성-이탈-휴면 회원 수	LONG	전체	Inactive·Churn·Sleep. 스냅샷
+cm	marketing	마케팅	New 방문 유저 수	LONG	전체	
+cm	marketing	마케팅	고활성 방문 유저 수	LONG	전체	
+cm	marketing	마케팅	저활성 방문 유저 수	LONG	전체	
+cm	marketing	마케팅	비활성-이탈-휴면 방문 유저 수	LONG	전체	
+cm	marketing	마케팅	New 세션 수	LONG	전체	
+cm	marketing	마케팅	고활성 세션 수	LONG	전체	
+cm	marketing	마케팅	저활성 세션 수	LONG	전체	
+cm	marketing	마케팅	비활성-이탈-휴면 세션 수	LONG	전체	
+cm	marketing	마케팅	(참고) 등급 미매칭 회원 수	LONG	전체	4개 세그먼트 합 + 이 값 = 전체 회원 수. 보고 지표 아님
+mss	product	프로덕트	DAU/WAU/MAU	LONG	전체	p_period 에 따라 DAU·WAU·MAU 중 하나로 읽는다. 로그인 기준
+mss	product	프로덕트	방문 Stickiness dau/wau	DOUBLE	week	week 전용. 29CM 은 같은 이름이 month 전용이다
+mss	product	프로덕트	방문 Stickiness wau/mau	DOUBLE	month	조회 범위 안에 7일이 온전히 든 주만 평균한다. 2026-10-06 재배포부터 29CM 과 같은 로직이며 그 전 값과 다르다
+mss	product	프로덕트	방문 Retention M+1	DOUBLE	month	**조회 범위의 마지막 달은 0 으로 나온다.** 다음 달이 범위에 없어서이고 0% 가 아니다. M월 값을 보려면 `p_end_dt` 를 M+1월 말까지 잡는다. Retention 3종 공통 (29CM 은 함수가 다음 달까지 알아서 읽어 이 문제가 없다)
+mss	product	프로덕트	전환 Retention M+1 (상품상세)	DOUBLE	month	시트 한 행을 상품상세·상품클릭 두 컬럼으로 나눴다. **조회 범위의 마지막 달은 0 으로 나온다.** 0% 가 아니다. `p_end_dt` 를 한 달 더 잡는다 (`방문 Retention M+1` 비고와 같다)
+mss	product	프로덕트	전환 Retention M+1 (상품클릭)	DOUBLE	month	29CM 의 `전환 Retention M+1` 과 대응하는 쪽. **조회 범위의 마지막 달은 0 으로 나온다.** 0% 가 아니다. `p_end_dt` 를 한 달 더 잡는다 (`방문 Retention M+1` 비고와 같다)
+mss	product	프로덕트	노출 세션 수	LONG	전체	
+mss	product	프로덕트	클릭 세션 수	LONG	전체	
+mss	product	프로덕트	상품상세 세션 수	LONG	전체	
+mss	product	프로덕트	활성 세션 수	LONG	전체	
+mss	product	프로덕트	방문 > 구매 전환율 (CVR)	DOUBLE	전체	분자는 정산, 분모는 행동 로그
+mss	product	프로덕트	방문 > 상품 전환율	DOUBLE	전체	
+mss	product	프로덕트	상세 > 구매 전환율	DOUBLE	전체	
+mss	product	프로덕트	상품 CTR	DOUBLE	전체	
+mss	product	프로덕트	상품 전환수	LONG	전체	
+mss	product	프로덕트	상품 노출수	LONG	전체	
+mss	product	프로덕트	상품전환 사용자수	LONG	전체	
+mss	product	프로덕트	상품상세 방문자수	LONG	전체	
+mss	product	프로덕트	상품상세 뷰수	LONG	전체	
+mss	product	프로덕트	인당 상품 탐색 빈도	DOUBLE	전체	
+mss	product	프로덕트	인당 브랜드 탐색 빈도	DOUBLE	전체	
+mss	product	프로덕트	인당 상품조회빈도	DOUBLE	전체	
+mss	product	프로덕트	전환율(CVR)	DOUBLE	전체	
+mss	product	프로덕트	클릭률(CTR)	DOUBLE	전체	`상품 CTR` 과 같은 값
+mss	product	프로덕트	페이지 PDP전환율(CVR)	DOUBLE	전체	
+mss	product	프로덕트	페이지 방문자수	LONG	전체	
+mss	product	프로덕트	페이지 방문수	LONG	전체	
+mss	product	프로덕트	상품상세 1Depth 전환율	DOUBLE	전체	
+mss	product	프로덕트	상품상세 2Depth 전환율	DOUBLE	전체	
+mss	product	프로덕트	1인당 상품 좋아요 수	DOUBLE	전체	
+mss	product	프로덕트	1인당 브랜드 좋아요 수	DOUBLE	전체	
+mss	commerce	커머스	GGMV	LONG	전체	상품권 구매 제외
+mss	commerce	커머스	GMV	LONG	전체	상품권 구매 제외
+mss	commerce	커머스	회원할인	LONG	전체	
+mss	commerce	커머스	제휴할인	LONG	전체	
+mss	commerce	커머스	정책기타할인	LONG	전체	
+mss	commerce	커머스	최저가할인	LONG	전체	
+mss	commerce	커머스	쿠폰할인	LONG	전체	상품 쿠폰 + 장바구니 쿠폰 롤업. 분해 2종과 같이 더하면 이중계상
+mss	commerce	커머스	상품 쿠폰할인	LONG	전체	
+mss	commerce	커머스	장바구니 쿠폰할인	LONG	전체	
+mss	commerce	커머스	적립금할인	LONG	전체	
+mss	commerce	커머스	선적립금할인	LONG	전체	
+mss	commerce	커머스	그룹할인	LONG	전체	
+mss	commerce	커머스	장바구니할인 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mss	commerce	커머스	장바구니할인 (자사부담 외)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mss	commerce	커머스	총 결제 할인금액	LONG	전체	
+mss	commerce	커머스	총 결제 할인율	DOUBLE	전체	
+mss	commerce	커머스	Net GMV	LONG	전체	
+mss	commerce	커머스	결제금액	LONG	전체	
+mss	commerce	커머스	업체부담 결제할인액	DECIMAL	전체	
+mss	commerce	커머스	자사부담 결제할인액	DECIMAL	전체	
+mss	commerce	커머스	자사부담 결제할인율	DOUBLE	전체	
+mss	commerce	커머스	Gross Take Amount	DECIMAL	전체	
+mss	commerce	커머스	Gross Take Rate	DOUBLE	전체	
+mss	commerce	커머스	Net Take Amount	DECIMAL	전체	
+mss	commerce	커머스	Net Take Rate	DOUBLE	전체	분모 GMV / 1.1
+mss	commerce	커머스	공헌이익액	DECIMAL	전체	
+mss	commerce	커머스	공헌이익률	DOUBLE	전체	분모 GMV / 1.1
+mss	commerce	커머스	구매자 수 (GMV 기준)	LONG	전체	uid 기준. 취소·환불만 발생한 회원 포함
+mss	commerce	커머스	구매자 수 (판매행 기준)	LONG	전체	판매행 회원만 (V8 「구매자수 (판매행)」)
+mss	commerce	커머스	주문 건수 (GMV 기준)	LONG	전체	판매 − 교환·환불 (V8 「주문건수 (GMV기준)」). 기본 안내 두 열 중 하나. 일 단위 음수 가능. 2026-10-19 전에는 「주문 건수」 값
+mss	commerce	커머스	주문 건수 (판매행 기준)	LONG	전체	결제된 주문 (V8 「주문건수 (판매행)」). 기본 안내 두 열 중 하나
+mss	commerce	커머스	주문 건수	LONG	전체	무슨 처리든 있었던 주문 전체 (V8 「주문 건수」). 명시 요청 때만
+mss	commerce	커머스	판매수량 (GMV 기준)	LONG	전체	
+mss	commerce	커머스	인당 주문 건수 (GMV 기준)	DOUBLE	전체	
+mss	commerce	커머스	평균판매단가 (GMV 기준)	DOUBLE	전체	
+mss	commerce	커머스	객단가 (GMV 기준)	DOUBLE	전체	
+mss	commerce	커머스	평균주문단가 (GMV 기준)	DOUBLE	전체	
+mss	ads	광고사업	광고 노출 수	LONG	전체	
+mss	ads	광고사업	광고 클릭 수	LONG	전체	
+mss	ads	광고사업	광고 매출액	DOUBLE	전체	
+mss	ads	광고사업	CPC	DOUBLE	전체	
+mss	ads	광고사업	광고 직접 기여 구매 수	LONG	전체	
+mss	ads	광고사업	광고 직접 기여 거래액	DOUBLE	전체	
+mss	ads	광고사업	광고 간접 기여 구매 수	LONG	전체	
+mss	ads	광고사업	광고 간접 기여 거래액	DOUBLE	전체	
+mss	ads	광고사업	광고 직접 기여 ROAS	DOUBLE	전체	퍼센트 (다시 ×100 하지 않는다)
+mss	ads	광고사업	광고 간접 기여 ROAS	DOUBLE	전체	퍼센트
+mss	payments	페이먼츠	무머니 순연동 사용자 수	LONG	전체	누적값. 기간 마지막 날 시점. SUM 금지
+mss	payments	페이먼츠	무머니 연동 사용자 수	LONG	전체	누적값. 기간 마지막 날 시점. SUM 금지
+mss	payments	페이먼츠	무머니 충전 금액	LONG	전체	
+mss	payments	페이먼츠	무머니 인출 금액	LONG	전체	
+mss	payments	페이먼츠	무머니 결제 거래액	LONG	전체	
+mss	payments	페이먼츠	바우처 판매 거래액	LONG	전체	무신사 전용 지표
+mss	payments	페이먼츠	바우처 순발급 금액	LONG	전체	
+mss	payments	페이먼츠	무머니 AoV	DOUBLE	전체	
+mss	payments	페이먼츠	무머니 충전 사용자 수	LONG	day	일별 distinct 라 합산 불가
+mss	marketing	마케팅	가입자 수	LONG	전체	
+mss	marketing	마케팅	첫 구매자 수	LONG	전체	
+mss	marketing	마케팅	카테고리 첫 구매자 수	LONG	전체	카테고리를 가로지른 사용자 distinct
+mss	marketing	마케팅	브랜드 첫 구매자 수	LONG	전체	브랜드를 가로지른 사용자 distinct. 전체 판매 이력을 읽어 무겁다
+mss	marketing	마케팅	구매자 수 (GGMV 기준)	LONG	전체	판매행 기준. 커머스의 GMV 기준 동명 지표와 값이 다르다
+mss	marketing	마케팅	주문 건수 (GGMV 기준)	LONG	전체	
+mss	marketing	마케팅	판매수량 (GGMV 기준)	LONG	전체	
+mss	marketing	마케팅	인당 주문 건수 (GGMV 기준)	DOUBLE	전체	
+mss	marketing	마케팅	평균판매단가 (GGMV 기준)	DOUBLE	전체	
+mss	marketing	마케팅	객단가 (GGMV 기준)	DOUBLE	전체	
+mss	marketing	마케팅	평균주문단가 (GGMV 기준)	DOUBLE	전체	
+mss	marketing	마케팅	방문자 수 (로그인 기준)	LONG	전체	
+mss	marketing	마케팅	앱설치 수	LONG	전체	원천이 현재 상태 복제본이라 과거 값도 움직인다
+mss	marketing	마케팅	New 회원 수	LONG	전체	세그먼트 회원 수 5종은 기준일이 속한 달 1일 스냅샷
+mss	marketing	마케팅	Revisit 회원 수	LONG	전체	29CM 에는 없는 세그먼트
+mss	marketing	마케팅	고활성 회원 수	LONG	전체	
+mss	marketing	마케팅	저활성 회원 수	LONG	전체	
+mss	marketing	마케팅	비활성-이탈-휴면 회원 수	LONG	전체	
+mss	marketing	마케팅	New 방문 유저 수	LONG	전체	
+mss	marketing	마케팅	Revisit 방문 유저 수	LONG	전체	
+mss	marketing	마케팅	고활성 방문 유저 수	LONG	전체	
+mss	marketing	마케팅	저활성 방문 유저 수	LONG	전체	
+mss	marketing	마케팅	비활성-이탈-휴면 방문 유저 수	LONG	전체	
+mss	marketing	마케팅	New 세션 수	LONG	전체	
+mss	marketing	마케팅	Revisit 세션 수	LONG	전체	
+mss	marketing	마케팅	고활성 세션 수	LONG	전체	
+mss	marketing	마케팅	저활성 세션 수	LONG	전체	
+mss	marketing	마케팅	비활성-이탈-휴면 세션 수	LONG	전체	
+mssglb	product	프로덕트	DAU	LONG	day	client_id 기준(비로그인 포함). 국내·29CM 은 로그인 기준
+mssglb	product	프로덕트	WAU	LONG	전체	기준일 포함 최근 7일 이동 구간. week·month 는 구간 마지막 날 값
+mssglb	product	프로덕트	MAU	LONG	전체	기준일 포함 최근 30일 이동 구간. 달력 월 distinct 가 아니다
+mssglb	product	프로덕트	상품상세 방문자수	LONG	전체	week·month 는 기간 distinct
+mssglb	product	프로덕트	노출 세션 수	LONG	전체	
+mssglb	product	프로덕트	클릭 세션 수	LONG	전체	
+mssglb	product	프로덕트	상품상세 세션 수	LONG	전체	
+mssglb	product	프로덕트	활성 세션 수	LONG	전체	
+mssglb	product	프로덕트	방문 > 구매 전환율 (CVR)	DOUBLE	전체	% 값 (×100). 분모가 세션이라 국내·29CM 과 정의가 다르다
+mssglb	product	프로덕트	방문 > 상품 전환율	DOUBLE	전체	% 값 (×100). 세션 기준
+mssglb	product	프로덕트	상세 > 구매 전환율	DOUBLE	전체	% 값 (×100). `전환율(CVR)` 과 같은 값
+mssglb	product	프로덕트	상품 CTR	DOUBLE	전체	% 값 (×100). `클릭률(CTR)` 과 같은 값
+mssglb	product	프로덕트	상품전환 사용자수	LONG	day	"구매 사용자 수(buyer_cnt). 국내의 ""상품 클릭 사용자"" 와 뜻이 다르다"
+mssglb	product	프로덕트	상품상세 뷰수	LONG	전체	
+mssglb	product	프로덕트	전환율(CVR)	DOUBLE	전체	% 값 (×100)
+mssglb	product	프로덕트	클릭률(CTR)	DOUBLE	전체	% 값 (×100)
+mssglb	product	프로덕트	페이지 PDP전환율(CVR)	DOUBLE	전체	% 값 (×100). 모든 지면 기준이라 `페이지 방문자수` 와 분모 범위가 다르다
+mssglb	product	프로덕트	페이지 방문자수	LONG	전체	PAGE 지면 목록 안 중복 제거
+mssglb	product	프로덕트	페이지 방문수	LONG	전체	
+mssglb	commerce	커머스	GGMV	LONG	전체	
+mssglb	commerce	커머스	환불 금액	LONG	전체	참고 컬럼 (시트에 없음). 음수
+mssglb	commerce	커머스	GMV	LONG	전체	상품금액 + 관세 + 결제수수료 + 배송비 + 판매세 + 반송비. 국내·29CM GMV 와 세는 대상이 다르다
+mssglb	commerce	커머스	적립금할인	LONG	전체	
+mssglb	commerce	커머스	프로모션할인 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssglb	commerce	커머스	프로모션할인 (브랜드분담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssglb	commerce	커머스	프로모션할인 (전체)	LONG	전체	참고 컬럼. 분해 2종과 같이 더하면 이중계상
+mssglb	commerce	커머스	총 결제 할인금액	LONG	전체	
+mssglb	commerce	커머스	총 결제 할인율	DOUBLE	전체	
+mssglb	commerce	커머스	Net GMV	DECIMAL	전체	
+mssglb	commerce	커머스	결제금액	LONG	전체	
+mssglb	commerce	커머스	업체부담 결제할인액	DECIMAL	전체	
+mssglb	commerce	커머스	자사부담 결제할인액	DECIMAL	전체	
+mssglb	commerce	커머스	자사부담 결제할인율	DOUBLE	전체	
+mssglb	commerce	커머스	Gross Take Amount	DECIMAL	전체	
+mssglb	commerce	커머스	Gross Take Rate	DOUBLE	전체	
+mssglb	commerce	커머스	Net Take Amount	DECIMAL	전체	
+mssglb	commerce	커머스	Net Take Rate	DOUBLE	전체	분모 GMV 원값 (/1.1 없음)
+mssglb	commerce	커머스	공헌이익액	DECIMAL	전체	
+mssglb	commerce	커머스	공헌이익률	DOUBLE	전체	분모 GMV 원값 (/1.1 없음)
+mssglb	commerce	커머스	PG 수수료	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssglb	commerce	커머스	물류비	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssglb	commerce	커머스	고정비	DECIMAL	전체	참고 컬럼. 이 함수의 필터에서는 항상 0
+mssglb	commerce	커머스	구매자 수 (GMV 기준)	LONG	전체	
+mssglb	commerce	커머스	구매자 수 (판매행 기준)	LONG	전체	판매행 회원만 (V8 「구매자수 (판매행)」)
+mssglb	commerce	커머스	주문 건수 (GMV 기준)	LONG	전체	판매 − 환불 주문 (1000 − 그 외, V8 「주문건수 (GMV기준)」). 기본 안내 두 열 중 하나. 일 단위 음수 가능. 2026-10-19 전에는 「주문 건수」 값
+mssglb	commerce	커머스	주문 건수 (판매행 기준)	LONG	전체	결제된 주문 (V8 「주문건수 (판매행)」). 기본 안내 두 열 중 하나
+mssglb	commerce	커머스	주문 건수	LONG	전체	무슨 처리든 있었던 주문 전체 (V8 「주문 건수」). 명시 요청 때만
+mssglb	commerce	커머스	판매수량 (GMV 기준)	LONG	전체	
+mssglb	commerce	커머스	인당 주문 건수 (GMV 기준)	DOUBLE	전체	
+mssglb	commerce	커머스	평균판매단가 (GMV 기준)	DOUBLE	전체	분자 GMV 에 배송비·관세 포함. 국내 ASP 와 직접 비교 불가
+mssglb	commerce	커머스	객단가 (GMV 기준)	DOUBLE	전체	
+mssglb	commerce	커머스	평균주문단가 (GMV 기준)	DOUBLE	전체	
+mssglb	marketing	마케팅	가입자 수	LONG	전체	국가 제외 조건 없음
+mssglb	marketing	마케팅	첫 구매자 수	LONG	전체	최초 유효주문일 기준. 글로벌 프로덕트 대시보드와 같은 값
+mssoff	commerce	커머스	GGMV	LONG	전체	
+mssoff	commerce	커머스	GMV	DECIMAL	전체	VAT 포함, 상품권 구매 제외
+mssoff	commerce	커머스	회원할인	DECIMAL	전체	
+mssoff	commerce	커머스	적립금할인	DECIMAL	전체	
+mssoff	commerce	커머스	선적립금할인	DECIMAL	전체	
+mssoff	commerce	커머스	주문서할인 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	주문서할인 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	쿠폰할인 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	쿠폰할인 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	장바구니할인 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	장바구니할인 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	에누리	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	상품권할인	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	총 결제 할인금액	DECIMAL	전체	
+mssoff	commerce	커머스	총 결제 할인율	DOUBLE	전체	
+mssoff	commerce	커머스	결제금액	LONG	전체	
+mssoff	commerce	커머스	매장쿠폰 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	매장쿠폰 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	O4O 상품쿠폰 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	O4O 상품쿠폰 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	O4O 장바구니쿠폰 (자사부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	O4O 장바구니쿠폰 (업체부담)	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	상품 쿠폰할인	DECIMAL	전체	매장쿠폰 + O4O 상품쿠폰 합. 2026-10-06 재배포부터 P&L TOBE V8 정의이며 그 전 값과 다르다
+mssoff	commerce	커머스	장바구니 쿠폰할인	DECIMAL	전체	O4O 장바구니쿠폰 자사 + 업체 합. 쿠폰이 아닌 장바구니할인은 `장바구니할인 (자사부담)`·`(업체부담)` 에 있다. 2026-10-06 재배포부터 P&L TOBE V8 정의
+mssoff	commerce	커머스	업체부담 결제할인액	DECIMAL	전체	
+mssoff	commerce	커머스	자사부담 결제할인액	DECIMAL	전체	
+mssoff	commerce	커머스	자사부담 결제할인율	DOUBLE	전체	
+mssoff	commerce	커머스	Gross Take Amount	LONG	전체	
+mssoff	commerce	커머스	Gross Take Rate	DOUBLE	전체	
+mssoff	commerce	커머스	Net Take Amount	DECIMAL	전체	
+mssoff	commerce	커머스	Net Take Rate	DOUBLE	전체	분모 GMV / 1.1
+mssoff	commerce	커머스	공헌이익액	DOUBLE	전체	고정비가 배부돼 음수가 나올 수 있음
+mssoff	commerce	커머스	공헌이익률	DOUBLE	전체	분모 GMV / 1.1
+mssoff	commerce	커머스	영업이익	DOUBLE	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	Net GMV	DECIMAL	전체	
+mssoff	commerce	커머스	수수료 Gross Take	DECIMAL	전체	참고 컬럼. 시트의 Gross Take Amount 가 아니다
+mssoff	commerce	커머스	추가수익	DOUBLE	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	총 오프라인 비용	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	감가상각비	DECIMAL	전체	참고 컬럼 (시트에 없음)
+mssoff	commerce	커머스	판매수량 (GMV 기준)	LONG	전체	
+mssoff	commerce	커머스	주문 건수 (GMV 기준)	LONG	전체	SALE − REFUND 영수증, V8 대로 매장 번호를 붙여 센다 (V8 「주문건수 (GMV기준)」). 회원·비회원 모두. 두 매장 번호에 걸쳐 적재된 한 계산을 2건으로 셀 수 있다. 기본 안내 두 열 중 하나. 일 단위 음수 가능. 2026-10-19 전에는 「주문 건수」 값
+mssoff	commerce	커머스	주문 건수 (판매행 기준)	LONG	전체	SALE 영수증 (V8 「주문건수 (판매행)」). 기본 안내 두 열 중 하나. 영수증 번호로 센다. 한 계산이 두 매장 번호에 걸쳐 적재돼도 1건이다(2026-09-01 실측: 겹치는 영수증은 같은 고객의 같은 계산)
+mssoff	commerce	커머스	주문 건수	LONG	전체	환불을 원 영수증으로 되돌려 센 영수증 전체 (V8 「주문 건수」). 명시 요청 때만. 영수증 번호로 센다. 매장별로 나눠 센 합보다 작다(2026-09 월 기준 −2.5%, 일별 −2.6% ~ −3.2%)
+mssoff	commerce	커머스	구매자 수 (GMV 기준)	LONG	전체	식별 회원만 (member_uid > 0)
+mssoff	commerce	커머스	평균판매단가 (GMV 기준)	DOUBLE	전체	전체 거래 기준
+mssoff	commerce	커머스	객단가 (GMV 기준)	DOUBLE	전체	분자도 회원 GMV
+mssoff	commerce	커머스	평균주문단가 (GMV 기준)	DOUBLE	전체	전체 거래 기준
+mssoff	commerce	커머스	인당 주문 건수 (GMV 기준)	DOUBLE	전체	주문 건수 ÷ 구매자 수가 아니다. 분자가 회원·판매행 기준
+mss	logistics	물류·운영	센터출고준수율(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	도착보장준수율_컷오프 기준(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	PLUS CR(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	물동량 예측 정확도(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	재고 Fill-Rate(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	피킹 UPH(Logistics)	DOUBLE	전체	신규 함수
+mss	logistics	물류·운영	글로벌 SLA 준수율(Logistics)	DOUBLE	전체	신규 함수
+mss	logistics	물류·운영	Actual 백로그 수량(Logistics)	BIGINT	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	Pending 백로그 수량(Logistics)	BIGINT	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	주문수량(Logistics)	BIGINT	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	출고준수수량(Logistics)	BIGINT	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	출고미준수수량 (Logistics)	BIGINT	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	교환 리드타임(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	환불 리드타임(Logistics)	DOUBLE	전체	신규 함수. 원천 적재가 2025년에 멈춰 있어 최근 기간은 NULL
+mss	logistics	물류·운영	인입률 (클레임Call+1:1+회원상담)	DOUBLE	전체	신규 함수

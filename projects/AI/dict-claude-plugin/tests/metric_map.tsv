@@ -1,0 +1,8 @@
+channel	query_metric	tvf_metric	period	value_column	scale	abs_tolerance	skip_reason
+cm	DAU	DAU/WAU/MAU	day				
+cm	WAU	DAU/WAU/MAU	week				
+cm	MAU	DAU/WAU/MAU	month				
+cm	방문 Stickiness(dau&wau)	방문 Stickiness dau/wau	month				
+cm	방문 Stickiness(wau&mau)	방문 Stickiness wau/mau	month				
+mss	PLUS CR(Logistics)	PLUS CR(Logistics)	day	plus_cr_rate		0.005	
+mssglb	문의 후 0·1·2·3개월 내 구매율						여러 문장으로 된 2024년 CS 스냅샷 분석 쿼리. 기간 지표가 아니라 TVF 로 만들지 않음

@@ -1,0 +1,24 @@
+{
+  "_note": "pnl_model.py가 읽는 사내 실적 기반 입력값의 구조 예시. 아래 숫자는 구조 설명용 임의값이며 실제 분석값이 아님. 실제 값은 internal_inputs.json(비공개)에 둔다.",
+  "share_curve": {
+    "Bear": [0.00003, 0.00007, 0.00007],
+    "Base": [0.0001, 0.0002, 0.0002],
+    "Bull": [0.0001, 0.0005, 0.001]
+  },
+  "shape_offset_years": {"Bear": 0, "Base": 1, "Bull": 0},
+  "cap_retention": {"EU": 0.7, "UK": 0.7},
+  "aov_after_cap_krw": {"EU": 100000, "UK": 100000},
+  "cost_ratio": {"GT": 0.40, "NT": 0.30, "GT_GOODS": 0.35, "DLV_FEE": 0.05, "PG": 0.03, "LOG": 0.20},
+  "return_rate": 0.04,
+  "marketing_rate_curve": {
+    "Bear": [0.20, 0.15, 0.10],
+    "Base": [0.20, 0.15, 0.10],
+    "Bull": [0.20, 0.15, 0.10]
+  },
+  "seasonality_12m": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+  "ramp_up_monthly": [
+    {"ym": "2022-09", "value": 1.0},
+    {"ym": "2022-10", "value": 1.1},
+    "... 48개월 (관세 보정 완료된 월별 상품금액)"
+  ]
+}

@@ -221,3 +221,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# OS / raw data
+.DS_Store
+*.jsonl
+*.csv
+*.tsv
+!projects/AI/dict-claude-plugin/**/*.tsv
+.pytest_cache/
+internal_inputs.json
+
+# Secrets
+.env.*
+!.env.example
+secrets/
+credentials/
+*.pem
+*.key

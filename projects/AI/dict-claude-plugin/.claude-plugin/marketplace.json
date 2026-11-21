@@ -1,0 +1,14 @@
+{
+  "name": "common-data-dictionary",
+  "owner": {
+    "name": "haera kang"
+  },
+  "plugins": [
+    {
+      "name": "comm-dict",
+      "source": "./",
+      "description": "/dictionary 명령어로 데이터 딕셔너리 공인 지표를 조회한다. 29CM · 무신사 · 무신사 글로벌 · 오프라인 334개 지표.",
+      "version": "1.0.0"
+    }
+  ]
+}

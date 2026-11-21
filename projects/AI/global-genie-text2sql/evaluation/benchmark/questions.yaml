@@ -1,0 +1,632 @@
+# =====================================================================================
+# Text-to-SQL 벤치마크 질문셋 — 글로벌 KPI
+#
+# 필드
+#   id / domain / difficulty(easy|medium|hard) / route(기대 경로: MV | TVF | MV+MV)
+#   question       : Genie 에 그대로 넣는 자연어 질문
+#   gold_sql       : 정답 SQL. trusted_sql 의 로직을 원천 테이블 기준으로 그대로 쓴다.
+#                    (스냅샷·판정 등 TVF 전용 질문은 검증 완료된 TVF 호출이 정답)
+#   reference_sql  : 표준 인터페이스(Metric View/TVF)로 쓴 기대 SQL.
+#                    run 1(semantic layer 검증)에서 gold 와 같아야 한다.
+#   keys           : 결과 행을 맞추는 차원 컬럼(gold 컬럼명). 비어 있으면 1행 결과.
+#   measures       : 비교할 측정값. kind = amount | count | ratio
+#   top_n          : 순위형 질문. 상위 N 개 키 집합만 비교(동률 허용)
+#   checks         : 생성 SQL 정적 검사. dim = metric | filter
+#                    must    : 반드시 있어야 하는 패턴(정규식, 대소문자 무시)
+#                    must_not: 있으면 안 되는 패턴
+#                    if      : 이 패턴이 SQL 에 있을 때만 검사(예: 원천 직접 조회 시)
+#   answer_checks  : 답변 텍스트 검사(guardrail 질문). any = 이 중 하나는 포함
+#
+# 기준일: 2026-11-17 실행 기준. "지난달" = 2026-10.
+# =====================================================================================
+
+defaults:
+  amount_rtol: 0.000001     # 같은 원천이라 사실상 정확히 일치해야 한다
+  ratio_atol: 0.0001        # 비율(0~1). % 단위로 답하면 자동으로 /100 해서 비교
+  efficiency_ratio_warn: 3  # gold 대비 실행시간이 3배 넘으면 비효율로 표시
+
+common_checks:
+  settlement_raw: &settlement_raw
+    - { dim: filter, if: "mssglb_settlement_daily_vw", must: "state_order", why: "유효 주문 필터 누락" }
+    - { dim: filter, if: "mssglb_settlement_daily_vw", must: "'ZZ'", why: "조조타운/티몰 제외 누락" }
+  no_sunset_cols: &no_sunset_cols
+    - { dim: metric, must_not: "\\b(mss_dc_amt|brand_share_dc_amt|promo_discount_amt)\\b", why: "일몰 예정 할인 컬럼 사용" }
+  no_avg_of_ratio: &no_avg_of_ratio
+    - { dim: metric, must_not: "AVG\\s*\\(\\s*MEASURE\\s*\\(\\s*\\w*(rate|margin|cvr|ctr|penetration)", why: "비율 measure 를 다시 평균" }
+    - { dim: metric, must_not: "AVG\\s*\\(\\s*\\w*(_rate|_margin|_pct|ctr)\\b", why: "행 단위 비율을 평균" }
+
+questions:
+
+  # ============================== 커머스 (mv_glb_commerce) ==============================
+  - id: Q01
+    domain: commerce
+    difficulty: easy
+    route: MV
+    question: "2026년 10월 글로벌 거래액과 주문수 알려줘"
+    gold_sql: |
+      SELECT SUM(gmv) AS gmv
+           , COUNT(DISTINCT IF(gmv_state = '1000', ord_no, NULL)) AS order_cnt
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+    reference_sql: |
+      SELECT MEASURE(gmv) AS gmv, MEASURE(order_cnt) AS order_cnt
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+    keys: []
+    measures: [{ col: gmv, kind: amount }, { col: order_cnt, kind: count }]
+    checks: *settlement_raw
+
+  - id: Q02
+    domain: commerce
+    difficulty: easy
+    route: MV
+    question: "10월 국가별 GMV 보여줘"
+    gold_sql: |
+      SELECT country_code, SUM(gmv) AS gmv
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY country_code
+    reference_sql: |
+      SELECT order_country_code AS country_code, MEASURE(gmv) AS gmv
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: gmv, kind: amount }]
+    checks: *settlement_raw
+
+  - id: Q03
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "10월 1P랑 3P GMV와 Net Take Rate 비교해줘"
+    note: "함정 — 소싱유형은 1P/3P/판매분매입 3갈래. 판매분매입을 3P 로 합치면 오답"
+    gold_sql: |
+      SELECT sourcing_type, SUM(gmv) AS gmv
+           , SUM(net_take_amt) / NULLIF(SUM(gmv), 0) AS net_take_rate
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY sourcing_type
+    reference_sql: |
+      SELECT sourcing_type, MEASURE(gmv) AS gmv, MEASURE(net_take_rate) AS net_take_rate
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [sourcing_type]
+    measures: [{ col: gmv, kind: amount }, { col: net_take_rate, kind: ratio }]
+    checks:
+      - { dim: metric, must_not: "판매분매입'\\s*THEN\\s*'3P", why: "판매분매입을 3P 로 합침" }
+      - *settlement_raw
+    answer_checks:
+      - { any: ["판매분매입"], why: "3번째 소싱유형 언급" }
+
+  - id: Q04
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "10월 일별 공헌이익률 추이"
+    gold_sql: |
+      SELECT TO_DATE(ord_state_date, 'yyyyMMdd') AS dt
+           , SUM(contribution_profit) / NULLIF(SUM(gmv), 0) AS contribution_profit_margin
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY 1
+    reference_sql: |
+      SELECT order_date AS dt, MEASURE(contribution_profit_margin) AS contribution_profit_margin
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [dt]
+    measures: [{ col: contribution_profit_margin, kind: ratio }]
+    checks: [*no_avg_of_ratio, *settlement_raw]
+
+  - id: Q05
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "올해 1월부터 10월까지 월별 총 결제 할인율이랑 그중 자사부담 비율"
+    gold_sql: |
+      SELECT SUBSTR(ord_state_date, 1, 6) AS ym
+           , SUM(total_dc_amt) / NULLIF(SUM(gmv), 0) AS total_payment_disc_rate
+           , SUM(total_mss_dc_amt) / NULLIF(SUM(total_dc_amt), 0) AS company_covered_disc_rate
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20260101' AND '20261031'
+      GROUP BY 1
+    reference_sql: |
+      SELECT DATE_FORMAT(order_month, 'yyyyMM') AS ym
+           , MEASURE(total_payment_disc_rate) AS total_payment_disc_rate
+           , MEASURE(company_covered_disc_rate) AS company_covered_disc_rate
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-01-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [ym]
+    key_normalize: { ym: month }   # 202610 / 2026-10 / 2026-10-01 모두 같은 월로 맞춘다
+    measures:
+      - { col: total_payment_disc_rate, kind: ratio }
+      - { col: company_covered_disc_rate, kind: ratio }
+    checks: [*no_sunset_cols, *no_avg_of_ratio, *settlement_raw]
+
+  - id: Q06
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "10월 국가별 장바구니 쿠폰 침투율"
+    note: "주문수는 판매 라인(gmv_state='1000')으로만 센다"
+    gold_sql: |
+      SELECT country_code
+           , COUNT(DISTINCT IF(gmv_state = '1000' AND cart_coupon_dc_amt <> 0, ord_no, NULL))
+             / NULLIF(COUNT(DISTINCT IF(gmv_state = '1000', ord_no, NULL)), 0) AS cart_coupon_penetration
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY country_code
+    reference_sql: |
+      SELECT order_country_code AS country_code, MEASURE(cart_coupon_penetration) AS cart_coupon_penetration
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: cart_coupon_penetration, kind: ratio }]
+    checks:
+      - { dim: filter, if: "mssglb_settlement_daily_vw", must: "1000", why: "판매 라인 필터 누락" }
+      - *settlement_raw
+
+  - id: Q07
+    domain: commerce
+    difficulty: hard
+    route: MV
+    question: "올해 1월부터 10월까지 월별 쿠폰 할인 금액 추이 보여줘"
+    note: "2026-08-10 프로모션→장바구니 쿠폰 전환. 연속 시계열은 promotion+cart+goods 합"
+    gold_sql: |
+      SELECT SUBSTR(ord_state_date, 1, 6) AS ym
+           , SUM(promotion_dc_amt + cart_coupon_dc_amt + goods_coupon_dc_amt) AS coupon_discount_total
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20260101' AND '20261031'
+      GROUP BY 1
+    reference_sql: |
+      SELECT DATE_FORMAT(order_month, 'yyyyMM') AS ym, MEASURE(coupon_discount_total) AS coupon_discount_total
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-01-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [ym]
+    key_normalize: { ym: month }
+    measures: [{ col: coupon_discount_total, kind: amount }]
+    checks: [*no_sunset_cols, *settlement_raw]
+    answer_checks:
+      - { any: ["전환", "8월", "장바구니"], why: "쿠폰 체계 전환 언급" }
+
+  - id: Q08
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "10월 국가별 상품 할인율"
+    note: "분모 = 정가 합계(qty*normal_price). base_amt·gmv 분모는 오답"
+    gold_sql: |
+      SELECT country_code
+           , SUM(tag_discount_amt) / NULLIF(SUM(qty * normal_price), 0) AS tag_discount_rate
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY country_code
+    reference_sql: |
+      SELECT order_country_code AS country_code, MEASURE(tag_discount_rate) AS tag_discount_rate
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: tag_discount_rate, kind: ratio }]
+    checks:
+      - { dim: metric, must_not: "tag_discount_amt\\)?\\s*\\)?\\s*/\\s*(NULLIF\\s*\\()?\\s*SUM\\s*\\(\\s*(gmv|base_amt)", why: "상품 할인율 분모 오류" }
+      - *settlement_raw
+
+  - id: Q09
+    domain: commerce
+    difficulty: easy
+    route: MV
+    question: "10월 배송비 할인 총액"
+    gold_sql: |
+      SELECT SUM(dlv_origin_amt - dlv_amt) AS dlv_discount_amt
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+    reference_sql: |
+      SELECT MEASURE(dlv_discount_amt) AS dlv_discount_amt
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+    keys: []
+    measures: [{ col: dlv_discount_amt, kind: amount }]
+    checks: *settlement_raw
+
+  - id: Q10
+    domain: commerce
+    difficulty: easy
+    route: MV
+    question: "지난달 미국 매출 얼마야?"
+    note: "동의어(매출→GMV) + 상대 기간(지난달) 해석"
+    gold_sql: |
+      SELECT SUM(gmv) AS gmv
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND country_code = 'US'
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+    reference_sql: |
+      SELECT MEASURE(gmv) AS gmv
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_country_code = 'US'
+        AND order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+    keys: []
+    measures: [{ col: gmv, kind: amount }]
+    checks:
+      - { dim: filter, must: "'US'", why: "국가 필터 누락" }
+      - *settlement_raw
+
+  - id: Q11
+    domain: commerce
+    difficulty: medium
+    route: MV
+    question: "10월 일본, 대만, 미국, 기타 국가 그룹별 구매자 수"
+    gold_sql: |
+      SELECT CASE WHEN country_code IN ('JP', 'TW', 'US') THEN country_code ELSE 'ETC' END AS country_group
+           , COUNT(DISTINCT IF(gmv_state = '1000', uid, NULL)) AS buyer_cnt
+      FROM mart.finance.mssglb_settlement_daily_vw
+      WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+        AND ord_state_date BETWEEN '20261001' AND '20261031'
+      GROUP BY 1
+    reference_sql: |
+      SELECT order_country_group AS country_group, MEASURE(buyer_cnt) AS buyer_cnt
+      FROM analytics.global.mv_glb_commerce
+      WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [country_group]
+    measures: [{ col: buyer_cnt, kind: count }]
+    checks: *settlement_raw
+
+  # ============================== 가입·전환 (mv_glb_signup_conversion) ==============================
+  - id: Q12
+    domain: signup
+    difficulty: easy
+    route: MV
+    question: "9월 가입국가별 신규 가입자 수"
+    note: "가입 테이블은 국내 회원도 포함 → KR 제외 필수"
+    gold_sql: |
+      SELECT d.signup_country_code AS country_code, COUNT(DISTINCT i.member_uid) AS signup_cnt
+      FROM musinsa.member.member_identity i
+      INNER JOIN musinsa.member.member_detail d ON i.member_uid = d.member_uid
+      WHERE TO_DATE(from_utc_timestamp(i.regist_date, 'Asia/Seoul')) BETWEEN '2026-09-01' AND '2026-09-30'
+        AND d.signup_country_code <> 'KR'
+      GROUP BY 1
+    reference_sql: |
+      SELECT signup_country_code AS country_code, MEASURE(signup_cnt) AS signup_cnt
+      FROM analytics.global.mv_glb_signup_conversion
+      WHERE reg_date BETWEEN DATE'2026-09-01' AND DATE'2026-09-30'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: signup_cnt, kind: count }]
+    checks:
+      - { dim: filter, if: "member_identity|tvf_onboarding_cohort", must: "(<>|!=|NOT\\s+IN\\s*\\()\\s*'KR'", why: "KR 제외 누락" }
+
+  - id: Q13
+    domain: signup
+    difficulty: hard
+    route: MV
+    question: "9월 가입자의 가입국가별 7일 내 첫구매 전환율"
+    note: "D7 = 가입일과 첫구매일 차이 7일 이하. 첫구매는 가입 이후 최초 주문"
+    gold_sql: |
+      WITH cohort AS (
+        SELECT i.member_uid AS uid, TO_DATE(from_utc_timestamp(i.regist_date, 'Asia/Seoul')) AS reg_date, d.signup_country_code AS country_code
+        FROM musinsa.member.member_identity i
+        INNER JOIN musinsa.member.member_detail d ON i.member_uid = d.member_uid
+        WHERE TO_DATE(from_utc_timestamp(i.regist_date, 'Asia/Seoul')) BETWEEN '2026-09-01' AND '2026-09-30'
+          AND d.signup_country_code <> 'KR'
+      ), first_order AS (
+        SELECT uid, MIN(TO_DATE(ord_state_date, 'yyyyMMdd')) AS first_ord_date
+        FROM mart.finance.mssglb_settlement_daily_vw
+        WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+          AND uid IN (SELECT uid FROM cohort)
+        GROUP BY uid
+      )
+      SELECT c.country_code
+           , COUNT(DISTINCT IF(DATE_DIFF(DAY, c.reg_date, f.first_ord_date) BETWEEN 0 AND 7, c.uid, NULL))
+             / NULLIF(COUNT(DISTINCT c.uid), 0) AS cvr_d7
+      FROM cohort c LEFT JOIN first_order f ON c.uid = f.uid
+      GROUP BY 1
+    reference_sql: |
+      SELECT signup_country_code AS country_code, MEASURE(cvr_d7) AS cvr_d7
+      FROM analytics.global.mv_glb_signup_conversion
+      WHERE reg_date BETWEEN DATE'2026-09-01' AND DATE'2026-09-30'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: cvr_d7, kind: ratio }]
+    checks:
+      - { dim: filter, if: "member_identity|tvf_onboarding_cohort", must: "(<>|!=|NOT\\s+IN\\s*\\()\\s*'KR'", why: "KR 제외 누락" }
+      - { dim: metric, if: "tvf_onboarding_first_order", must_not: "date_add\\([^)]*,\\s*6\\s*\\)", why: "구 규칙 4(N-1) 적용 → 하루 짧은 전환창" }
+
+  - id: Q14
+    domain: signup
+    difficulty: medium
+    route: MV
+    question: "9월 가입자 전체의 최종 첫구매 전환율과 평균 소요일"
+    gold_sql: |
+      WITH cohort AS (
+        SELECT i.member_uid AS uid, TO_DATE(from_utc_timestamp(i.regist_date, 'Asia/Seoul')) AS reg_date
+        FROM musinsa.member.member_identity i
+        INNER JOIN musinsa.member.member_detail d ON i.member_uid = d.member_uid
+        WHERE TO_DATE(from_utc_timestamp(i.regist_date, 'Asia/Seoul')) BETWEEN '2026-09-01' AND '2026-09-30'
+          AND d.signup_country_code <> 'KR'
+      ), first_order AS (
+        SELECT uid, MIN(TO_DATE(ord_state_date, 'yyyyMMdd')) AS first_ord_date
+        FROM mart.finance.mssglb_settlement_daily_vw
+        WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+          AND uid IN (SELECT uid FROM cohort)
+        GROUP BY uid
+      ), j AS (
+        SELECT c.uid, IF(f.first_ord_date >= c.reg_date, DATE_DIFF(DAY, c.reg_date, f.first_ord_date), NULL) AS dur
+        FROM cohort c LEFT JOIN first_order f ON c.uid = f.uid
+      )
+      SELECT COUNT(DISTINCT IF(dur IS NOT NULL, uid, NULL)) / NULLIF(COUNT(DISTINCT uid), 0) AS final_cvr
+           , AVG(dur) AS avg_days_to_first
+      FROM j
+    reference_sql: |
+      SELECT MEASURE(final_cvr) AS final_cvr, MEASURE(avg_days_to_first) AS avg_days_to_first
+      FROM analytics.global.mv_glb_signup_conversion
+      WHERE reg_date BETWEEN DATE'2026-09-01' AND DATE'2026-09-30'
+    keys: []
+    measures: [{ col: final_cvr, kind: ratio }, { col: avg_days_to_first, kind: amount, rtol: 0.001 }]
+    answer_checks:
+      - { any: ["누적", "조회 시점", "과소", "우측"], why: "누적 지표의 시점 의존성 언급(규칙 6)" }
+
+  # ============================== 찜 (mv_glb_like) ==============================
+  - id: Q15
+    domain: engagement
+    difficulty: medium
+    route: MV
+    question: "10월 한 달 동안 상품을 찜한 글로벌 회원 수를 가입국가별로"
+    note: "일자별 순회원수를 더하면 중복 → 기간 전체에서 DISTINCT"
+    gold_sql: |
+      SELECT c.signup_country_code AS country_code, COUNT(DISTINCT b.member_uid) AS like_member_cnt
+      FROM musinsa.engagement.like_summary a
+      INNER JOIN analytics.engagement.like_member_view b ON a.like_summary_id = b.like_summary_id
+      LEFT JOIN musinsa.member.member_detail c ON b.member_uid = c.member_uid
+      WHERE a.type = 'GOODS' AND a.deleted_flag = 0
+        AND TO_DATE(b.create_dt) BETWEEN '2026-10-01' AND '2026-10-31'
+        AND c.signup_country_code <> 'KR'
+      GROUP BY 1
+    reference_sql: |
+      SELECT signup_country_code AS country_code, MEASURE(like_member_cnt) AS like_member_cnt
+      FROM analytics.global.mv_glb_like
+      WHERE like_type = 'GOODS' AND global_only = 'Y'
+        AND like_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: like_member_cnt, kind: count }]
+    checks:
+      - { dim: filter, if: "like_summary|tvf_like_event", must: "(<>|!=|NOT\\s+IN\\s*\\()\\s*'KR'", why: "KR 제외 누락" }
+      - { dim: metric, if: "tvf_like_event", must_not: "SUM\\s*\\(\\s*like_cnt", why: "일자별 순회원수를 합산(중복)" }
+      - { dim: filter, must_not: "from_utc_timestamp", why: "create_dt 는 KST — UTC 변환 금지" }
+
+  - id: Q16
+    domain: engagement
+    difficulty: medium
+    route: MV
+    question: "10월에 가장 많은 회원이 찜한 상품 TOP 10"
+    note: "찜은 글로벌 회원만(가입국가 KR 제외)이 기본"
+    gold_sql: |
+      SELECT a.relation_id AS goods_no, COUNT(DISTINCT b.member_uid) AS like_member_cnt
+      FROM musinsa.engagement.like_summary a
+      INNER JOIN analytics.engagement.like_member_view b ON a.like_summary_id = b.like_summary_id
+      LEFT JOIN musinsa.member.member_detail c ON b.member_uid = c.member_uid
+      WHERE a.type = 'GOODS' AND a.deleted_flag = 0
+        AND TO_DATE(b.create_dt) BETWEEN '2026-10-01' AND '2026-10-31'
+        AND c.signup_country_code <> 'KR'
+      GROUP BY 1
+      ORDER BY 2 DESC
+      LIMIT 10
+    reference_sql: |
+      SELECT target_id AS goods_no, MEASURE(like_member_cnt) AS like_member_cnt
+      FROM analytics.global.mv_glb_like
+      WHERE like_type = 'GOODS' AND global_only = 'Y'
+        AND like_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31'
+      GROUP BY ALL ORDER BY 2 DESC LIMIT 10
+    keys: [goods_no]
+    top_n: 10
+    measures: [{ col: like_member_cnt, kind: count }]
+    checks:
+      - { dim: filter, if: "like_summary|tvf_like_event", must: "(<>|!=|NOT\\s+IN\\s*\\()\\s*'KR'", why: "KR 제외 누락" }
+
+  # ============================== 검색·클릭 (mv_glb_web_engagement) ==============================
+  - id: Q17
+    domain: engagement
+    difficulty: medium
+    route: MV
+    question: "10월 국가별 검색 순방문자 수"
+    note: "방문자 = client_id(비로그인 포함). hash_id 로 세면 오답"
+    gold_sql: |
+      SELECT CASE WHEN stream_id = '<ga4_stream_id_JP>' OR country = 'Japan' THEN 'JP'
+                  WHEN stream_id = '<ga4_stream_id_HK>' OR country = 'Hong kong' THEN 'HK'
+                  WHEN stream_id = '<ga4_stream_id_PH>' OR country = 'Philippines' THEN 'PH'
+                  WHEN stream_id = '<ga4_stream_id_TH>' OR country = 'Thailand' THEN 'TH'
+                  WHEN stream_id = '<ga4_stream_id_SG>' OR country = 'Singapore' THEN 'SG'
+                  WHEN stream_id = '<ga4_stream_id_MY>' OR country = 'Malaysia' THEN 'MY'
+                  WHEN stream_id = '<ga4_stream_id_ID>' OR country = 'Indonesia' THEN 'ID'
+                  WHEN stream_id = '<ga4_stream_id_TW>' OR country = 'Taiwan' THEN 'TW'
+                  WHEN stream_id = '<ga4_stream_id_VN>' OR country = 'Vietnam' THEN 'VN'
+                  WHEN stream_id = '<ga4_stream_id_US>' OR country = 'United States' THEN 'US'
+                  WHEN stream_id = '<ga4_stream_id_CA>' OR country = 'Canada' THEN 'CA'
+                  WHEN stream_id = '<ga4_stream_id_NZ>' OR country = 'New Zealand' THEN 'NZ'
+                  WHEN stream_id = '<ga4_stream_id_AU>' OR country = 'Australia' THEN 'AU'
+                  ELSE 'ETC' END AS country_code
+           , COUNT(DISTINCT client_id) AS search_visitor_cnt
+      FROM raw.web_log.global_ga4_log
+      WHERE dt BETWEEN '20261001' AND '20261031'
+        AND event_name = 'page_view' AND page_id = '/search'
+      GROUP BY 1
+    reference_sql: |
+      SELECT country_code, MEASURE(search_visitor_cnt) AS search_visitor_cnt
+      FROM analytics.global.mv_glb_web_engagement
+      WHERE dt BETWEEN '20261001' AND '20261031'
+      GROUP BY ALL
+    keys: [country_code]
+    measures: [{ col: search_visitor_cnt, kind: count }]
+    checks:
+      - { dim: metric, if: "global_ga4_log", must_not: "COUNT\\s*\\(\\s*DISTINCT\\s+hash_id", why: "hash_id 로 방문자 집계(비로그인 누락)" }
+      - { dim: filter, must: "\\bdt\\b", why: "파티션 컬럼 dt 미사용 → 풀스캔" }
+
+  - id: Q18
+    domain: engagement
+    difficulty: medium
+    route: MV
+    question: "10월 일별 상품 CTR"
+    gold_sql: |
+      SELECT TO_DATE(dt, 'yyyyMMdd') AS dt
+           , SUM(IF(event_name = 'select_item', 1, 0)) / NULLIF(SUM(IF(event_name = 'view_item_list', 1, 0)), 0) AS ctr
+      FROM raw.web_log.global_ga4_log
+      WHERE dt BETWEEN '20261001' AND '20261031'
+        AND event_name IN ('view_item_list', 'select_item')
+        AND goods_no IS NOT NULL
+        AND TRIM(goods_no) NOT IN ('', '(not set)', '(not provided)', 'null', 'undefined')
+      GROUP BY 1
+    reference_sql: |
+      SELECT event_date AS dt, MEASURE(ctr) AS ctr
+      FROM analytics.global.mv_glb_web_engagement
+      WHERE dt BETWEEN '20261001' AND '20261031'
+      GROUP BY ALL
+    keys: [dt]
+    key_normalize: { dt: date }
+    measures: [{ col: ctr, kind: ratio }]
+    checks:
+      - *no_avg_of_ratio
+      - { dim: filter, if: "global_ga4_log", must: "not set", why: "goods_no 센티널 미제외" }
+
+  - id: Q19
+    domain: engagement
+    difficulty: easy
+    route: MV
+    question: "10월 일본 인기 검색어 TOP 20"
+    gold_sql: |
+      SELECT LOWER(TRIM(search_term)) AS search_keyword, COUNT(client_id) AS search_cnt
+      FROM raw.web_log.global_ga4_log
+      WHERE dt BETWEEN '20261001' AND '20261031'
+        AND event_name = 'page_view' AND page_id = '/search'
+        AND (stream_id = '<ga4_stream_id_JP>' OR country = 'Japan')
+        AND search_term IS NOT NULL
+      GROUP BY 1
+      ORDER BY 2 DESC
+      LIMIT 20
+    reference_sql: |
+      SELECT search_keyword, MEASURE(search_cnt) AS search_cnt
+      FROM analytics.global.mv_glb_web_engagement
+      WHERE dt BETWEEN '20261001' AND '20261031' AND country_code = 'JP'
+        AND search_keyword IS NOT NULL
+      GROUP BY ALL ORDER BY 2 DESC LIMIT 20
+    keys: [search_keyword]
+    top_n: 20
+    measures: [{ col: search_cnt, kind: count }]
+
+  # ============================== TVF 전용 (판정·스냅샷) ==============================
+  - id: Q20
+    domain: shipping
+    difficulty: medium
+    route: TVF
+    question: "10월에 일본이 무료배송이었던 날짜 알려줘"
+    gold_sql: |
+      SELECT dt FROM analytics.global.tvf_settlement_free_shipping_calendar('20261001', '20261031')
+      WHERE country_code = 'JP' AND free_shipping_yn = 1
+    reference_sql: |
+      SELECT dt FROM analytics.global.tvf_settlement_free_shipping_calendar('20261001', '20261031')
+      WHERE country_code = 'JP' AND free_shipping_yn = 1
+    keys: [dt]
+    key_normalize: { dt: date }
+    measures: []
+    answer_checks:
+      - { any: ["추정", "90%"], why: "무료배송 판정이 추정치임을 언급(규칙 5)" }
+
+  - id: Q21
+    domain: discount
+    difficulty: medium
+    route: TVF
+    question: "지금 일본에서 판매중인 상품의 평균 상품 할인율"
+    note: "스냅샷 관점. 집계 할인율 = SUM(goods_dc_amt)/SUM(normal_price) (상품별 율 평균 아님)"
+    gold_sql: |
+      SELECT SUM(goods_dc_amt) / NULLIF(SUM(normal_price), 0) AS goods_dc_rate
+      FROM analytics.global.tvf_discount_goods_price_snapshot(DATE_FORMAT(CURRENT_DATE(), 'yyyyMMdd'))
+      WHERE country_code = 'JP'
+    reference_sql: |
+      SELECT SUM(goods_dc_amt) / NULLIF(SUM(normal_price), 0) AS goods_dc_rate
+      FROM analytics.global.tvf_discount_goods_price_snapshot(DATE_FORMAT(CURRENT_DATE(), 'yyyyMMdd'))
+      WHERE country_code = 'JP'
+    keys: []
+    measures: [{ col: goods_dc_rate, kind: ratio }]
+    checks:
+      - { dim: metric, must_not: "AVG\\s*\\(\\s*goods_dc_rate", why: "상품별 할인율 단순 평균" }
+
+  # ============================== 교차 도메인 ==============================
+  - id: Q22
+    domain: cross
+    difficulty: hard
+    route: MV+MV
+    question: "10월 국가별 GMV랑 상품 찜 회원 수 같이 보여줘"
+    note: "GMV 국가 = 주문국가, 찜 국가 = 가입국가 → 모수 차이를 답변에 명시해야 함"
+    gold_sql: |
+      WITH g AS (
+        SELECT country_code, SUM(gmv) AS gmv
+        FROM mart.finance.mssglb_settlement_daily_vw
+        WHERE state_order = TRUE AND country_code NOT IN ('ZZ', 'TS')
+          AND ord_state_date BETWEEN '20261001' AND '20261031'
+        GROUP BY 1
+      ), l AS (
+        SELECT c.signup_country_code AS country_code, COUNT(DISTINCT b.member_uid) AS like_member_cnt
+        FROM musinsa.engagement.like_summary a
+        INNER JOIN analytics.engagement.like_member_view b ON a.like_summary_id = b.like_summary_id
+        LEFT JOIN musinsa.member.member_detail c ON b.member_uid = c.member_uid
+        WHERE a.type = 'GOODS' AND a.deleted_flag = 0
+          AND TO_DATE(b.create_dt) BETWEEN '2026-10-01' AND '2026-10-31'
+        GROUP BY 1
+      )
+      SELECT g.country_code, g.gmv, l.like_member_cnt
+      FROM g LEFT JOIN l ON g.country_code = l.country_code
+    reference_sql: |
+      WITH g AS (
+        SELECT order_country_code AS country_code, MEASURE(gmv) AS gmv
+        FROM analytics.global.mv_glb_commerce
+        WHERE order_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31' GROUP BY ALL
+      ), l AS (
+        SELECT signup_country_code AS country_code, MEASURE(like_member_cnt) AS like_member_cnt
+        FROM analytics.global.mv_glb_like
+        WHERE like_type = 'GOODS' AND like_date BETWEEN DATE'2026-10-01' AND DATE'2026-10-31' GROUP BY ALL
+      )
+      SELECT g.country_code, g.gmv, l.like_member_cnt FROM g LEFT JOIN l ON g.country_code = l.country_code
+    keys: [country_code]
+    measures: [{ col: gmv, kind: amount }, { col: like_member_cnt, kind: count }]
+    answer_checks:
+      - { any: ["가입국가", "주문국가", "기준이 다", "모수"], why: "국가 기준 차이 언급(규칙 16)" }
+
+  # ============================== Guardrail (답하지 말아야 하거나 한계를 밝혀야 함) ==============================
+  - id: G01
+    domain: guardrail
+    difficulty: medium
+    route: NONE
+    question: "10월 글로벌 GMV랑 29CM GMV 비교해줘"
+    answer_checks:
+      - { any: ["정의가 다", "관세", "배송비", "직접 비교", "29CM"], why: "채널 간 GMV 정의 차이/범위 밖 안내" }
+
+  - id: G02
+    domain: guardrail
+    difficulty: easy
+    route: NONE
+    question: "지금 이 시점에 상품별 누적 찜 수 알려줘"
+    answer_checks:
+      - { any: ["누적", "신규", "답할 수 없", "제공하지"], why: "누적 찜은 표준 지표 범위 밖(규칙 18)" }
+
+  - id: G03
+    domain: guardrail
+    difficulty: easy
+    route: MV
+    question: "10월 상품쿠폰 할인 실적 알려줘"
+    answer_checks:
+      - { any: ["발생 기록이 없", "실적이 없", "2025"], why: "상품쿠폰 0원 = 기록 없음으로 답변(규칙 26)" }
